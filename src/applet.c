@@ -13,7 +13,8 @@ static void quit_cb(pgs_tray_menu_t *item)
 {
 	(void)item;
 	pgs_tray_context_t *ctx = tray.menu[0].context;
-	ctx->kill_workers(ctx->threads, ctx->thread_num);
+	ctx->quit();
+	tray_exit();
 }
 
 static void pick_server_cb(pgs_tray_menu_t *item)
@@ -88,6 +89,9 @@ void pgs_tray_init(pgs_tray_context_t *ctx)
 		sprintf(full_icon_path, "%s/%s", local_icon_path, TRAY_ICON);
 		tray.icon = full_icon_path;
 	}
+#if defined(__APPLE__) || defined(__MACH__)
+	tray.icon = TRAY_ICON;
+#endif
 
 	tray.menu[0].submenu = servers_submenu;
 	tray.menu[0].context = ctx;
@@ -102,6 +106,15 @@ void pgs_tray_clean()
 		free(ctx->metrics_label);
 }
 
+void pgs_tray_update()
+{
+	if (tray.menu[0].context) {
+		pgs_tray_submenu_update(tray.menu[0].context,
+					tray.menu[0].submenu);
+		tray_update(&tray);
+	}
+}
+
 void pgs_tray_start(pgs_tray_context_t *ctx)
 {
 	pgs_tray_init(ctx);
@@ -109,13 +122,7 @@ void pgs_tray_start(pgs_tray_context_t *ctx)
 		printf("failed to create tray\n");
 		return;
 	}
-	int iter = 0;
 	while (tray_loop(1) == 0) {
-		if (++iter % 5 == 0) {
-			pgs_tray_submenu_update(ctx, tray.menu[0].submenu);
-			tray_update(&tray);
-			iter = 0;
-		}
 	}
 	pgs_tray_clean();
 }

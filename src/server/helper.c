@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <signal.h>
+#include <pthread.h>
 
 static void pgs_timer_cb(evutil_socket_t fd, short event, void *data)
 {
